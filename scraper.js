@@ -1,16 +1,15 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
+const router = require("express").Router();
 
-const url = "https://www.jumia.co.ke/catalog/?q=phones";
+const jumia = "https://www.jumia.co.ke/catalog/?q=";
 
-// const productArray = [
-//     { description: "", price: "", link: ""}
-// ];
+// const carrefour = "https://www.carrefour.ke/mafken/en/v4/search?keyword=fridge"
 
-const products = [];
 
-async function scrape() {
-  const { data } = await axios.get(url);
+async function scrapeJumia(query) {
+  const products = [];
+  const { data } = await axios.get(jumia + query);
 
   const $ = cheerio.load(data);
 
@@ -21,7 +20,7 @@ async function scrape() {
     .each((index, product) => {
       var product = {
         description: $(product).find("div.info > h3").text().trim(),
-        imageUrl: $(product).find("div.img-c").find("img").attr('src'),
+        // imageUrl: $(product).find("div.img-c").find("img").attr('src'),
         price: parseInt(
           $(product)
             .find("div.info > .prc")
@@ -34,7 +33,20 @@ async function scrape() {
         products.push(product);
       }
     });
-  console.log(products);
+  return products;
 }
 
-scrape();
+
+
+router.get('/products', async (req, res) => {
+  try{
+    const itemsArray = await scrapeJumia(req.query.q)
+    res.status(200).send(itemsArray);
+    
+  }catch(err) {
+    res.status(404).send("Page not found!")
+  }
+  
+});
+
+// module.exports = router;
