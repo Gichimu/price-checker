@@ -4,9 +4,9 @@ const router = require("express").Router();
 
 const jumia = "https://www.jumia.co.ke/catalog/?q=";
 
-// const carrefour = "https://www.carrefour.ke/mafken/en/v4/search?keyword=fridge"
+const carrefour = "https://www.carrefour.ke/mafken/en/v4/search?keyword=";
 
-
+// get items from Jumia
 async function scrapeJumia(query) {
   const products = [];
   const { data } = await axios.get(jumia + query);
@@ -36,9 +36,44 @@ async function scrapeJumia(query) {
   return products;
 }
 
+// get items frm Carrefour
+async function scrapeCarrefour(query) {
+  const products = [];
+  const { data } = await axios.get(carrefour + query);
 
+  const $ = cheerio.load(data);
 
-router.get('/products', async (req, res) => {
+  const item = $("div .css-b9nx4o");
+
+  $(item)
+    .find("div.css-yqd9tx")
+    .each((index, item) => {
+      var product = {
+        description: $(item)
+          .find("div.css-11qbfb")
+          .find("div.css-1nhiovu")
+          .text(),
+        price:
+          parseInt(
+            $(item)
+              .find("div.css-11qbfb")
+              .find("div.css-17fvam3")
+              .text()
+              .trim()
+              .replace(/[abcdeEfghijkKlmnopqrsStuvwxyz,.]/g, "")
+              .split(" ")[1]
+          ) / 100,
+        link: 'https://www.carrefour.ke' + $(item)
+        .find("div.css-1fltn9q")
+        .find("div.css-1itwyrf")
+        .find("a").attr("href"),
+      };
+      products.push(product);
+    });
+  return products;
+}
+
+router.get('/getFromJumia', async (req, res) => {
   try{
     const itemsArray = await scrapeJumia(req.query.q)
     res.status(200).send(itemsArray);
@@ -49,4 +84,14 @@ router.get('/products', async (req, res) => {
   
 });
 
-// module.exports = router;
+router.get('/getFromCarrefour', async (req, res) => {
+  try{
+    const itemsArray = await scrapeCarrefour(req.query.q)
+    res.status(200).send(itemsArray);
+  }catch(err) {
+    res.status(404).send("Page not found!")
+  }
+  
+});
+
+module.exports = router;
