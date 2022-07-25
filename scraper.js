@@ -34,7 +34,7 @@ async function scrapeJumia(query) {
             .text()
             .replace(/[KSh,]/g, "")
         ),
-        img: $(product).find("div.img-c").find("img").attr("src"),
+        img: $(product).find("div.img-c").find("img").attr("data-src"),
         link: "https://www.jumia.co.ke" + $(product).attr("href"),
       };
       if (product.description != "") {
