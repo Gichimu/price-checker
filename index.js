@@ -1,8 +1,17 @@
 const express = require('express');
 
+const cors = require('cors');
+
 const route = require('./scraper')
 
 const app = express()
+
+// cors
+app.use(cors());
+app.options('*', cors());
+
+// middleware
+app.use(express.json());
 
 // add route middleware
 app.use('/api', route);

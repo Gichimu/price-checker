@@ -1,23 +1,30 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const router = require("express").Router();
+const fetch = require("node-fetch");
 
 const jumia = "https://www.jumia.co.ke/catalog/?q=";
 
 const carrefour = "https://www.carrefour.ke/mafken/en/v4/search?keyword=";
+
+
 
 // get items from Jumia
 async function scrapeJumia(query) {
   const products = [];
   const { data } = await axios.get(jumia + query);
 
+  
+
   const $ = cheerio.load(data);
 
   const item = $("div .prd");
 
+
   $(item)
     .find("a")
     .each((index, product) => {
+
       var product = {
         description: $(product).find("div.info > h3").text().trim(),
         // imageUrl: $(product).find("div.img-c").find("img").attr('src'),
@@ -27,6 +34,7 @@ async function scrapeJumia(query) {
             .text()
             .replace(/[KSh,]/g, "")
         ),
+        img: $(product).find("div.img-c").find("img").attr("src"),
         link: "https://www.jumia.co.ke" + $(product).attr("href"),
       };
       if (product.description != "") {
@@ -63,6 +71,11 @@ async function scrapeCarrefour(query) {
               .replace(/[abcdeEfghijkKlmnopqrsStuvwxyz,.]/g, "")
               .split(" ")[1]
           ) / 100,
+        img: $(item)
+        .find("div.css-1fltn9q")
+        .find("div.css-1itwyrf")
+        .find("a")
+        .find("img").attr("src"),
         link: 'https://www.carrefour.ke' + $(item)
         .find("div.css-1fltn9q")
         .find("div.css-1itwyrf")
